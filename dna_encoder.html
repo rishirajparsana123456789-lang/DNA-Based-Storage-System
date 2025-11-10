@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DNA Text Encoder & Decoder</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      margin: 30px;
+      background: #0b132b;
+      color: #f0f0f0;
+    }
+    h1 {
+      color: #6fffe9;
+      text-align: center;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #1c2541;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+    }
+    label, input, textarea {
+      display: block;
+      margin-top: 12px;
+    }
+    textarea, input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      background: #3a506b;
+      color: #fff;
+    }
+    .mapping {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    button {
+      background: #5bc0be;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      margin-top: 15px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #6fffe9;
+    }
+    .output {
+      margin-top: 15px;
+      background: #0b132b;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: monospace;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+    .highlight-A { color: #ff4b5c; }
+    .highlight-C { color: #fddb3a; }
+    .highlight-G { color: #29c7ac; }
+    .highlight-T { color: #3f72af; }
+  </style>
+</head>
+<body>
+  <h1>🧬 DNA Text Encoder & Decoder</h1>
+  <div class="container">
+    <label>Enter Text to Encode:</label>
+    <textarea id="inputText" rows="4" placeholder="Type your message..."></textarea>
+
+    <h3>Set DNA Base Mappings (2-bit each)</h3>
+    <div class="mapping">
+      <div><label>A:</label><input id="mapA" value="00" maxlength="2"></div>
+      <div><label>C:</label><input id="mapC" value="01" maxlength="2"></div>
+      <div><label>G:</label><input id="mapG" value="10" maxlength="2"></div>
+      <div><label>T:</label><input id="mapT" value="11" maxlength="2"></div>
+    </div>
+
+    <button onclick="encodeDNA()">Encode to DNA</button>
+    <button onclick="decodeDNA()">Decode from DNA</button>
+
+    <h3>DNA Sequence:</h3>
+    <div class="output" id="dnaOutput"></div>
+
+    <h3>Decoded Text:</h3>
+    <div class="output" id="decodedOutput"></div>
+  </div>
+
+  <script>
+    function getMapping() {
+      return {
+        A: document.getElementById("mapA").value,
+        C: document.getElementById("mapC").value,
+        G: document.getElementById("mapG").value,
+        T: document.getElementById("mapT").value
+      };
+    }
+
+    function invertMapping(mapping) {
+      const inverse = {};
+      for (const base in mapping) {
+        inverse[mapping[base]] = base;
+      }
+      return inverse;
+    }
+
+    function textToBinary(text) {
+      return text.split('')
+        .map(ch => ch.charCodeAt(0).toString(2).padStart(8, '0'))
+        .join('');
+    }
+
+    function binaryToText(binary) {
+      let result = '';
+      for (let i = 0; i < binary.length; i += 8) {
+        result += String.fromCharCode(parseInt(binary.slice(i, i + 8), 2));
+      }
+      return result;
+    }
+
+    function encodeDNA() {
+      const text = document.getElementById("inputText").value;
+      const map = getMapping();
+      const binary = textToBinary(text);
+      let dna = '';
+
+      // Split binary into 2-bit chunks
+      for (let i = 0; i < binary.length; i += 2) {
+        const bits = binary.slice(i, i + 2);
+        const base = Object.keys(map).find(k => map[k] === bits);
+        dna += base || '?';
+      }
+
+      // Colorized visualization
+      const colored = dna
+        .replace(/A/g, '<span class="highlight-A">A</span>')
+        .replace(/C/g, '<span class="highlight-C">C</span>')
+        .replace(/G/g, '<span class="highlight-G">G</span>')
+        .replace(/T/g, '<span class="highlight-T">T</span>');
+
+      document.getElementById("dnaOutput").innerHTML = colored;
+      document.getElementById("decodedOutput").innerText = '';
+    }
+
+    function decodeDNA() {
+      const dnaRaw = document.getElementById("dnaOutput").innerText.trim();
+      const map = getMapping();
+      const inverse = invertMapping(map);
+
+      let binary = '';
+      for (const base of dnaRaw) {
+        if (inverse[base]) binary += map[base];
+      }
+
+      const decoded = binaryToText(binary);
+      document.getElementById("decodedOutput").innerText = decoded;
+    }
+  </script>
+</body>
+</html>
